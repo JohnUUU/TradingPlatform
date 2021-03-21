@@ -2,7 +2,7 @@ package brown.platform.item.library;
 
 import org.spectrumauctions.sats.core.model.gsvm.GSVMLicense;
 
-import brown.user.agent.library.SATSUtil;
+import brown.user.agent.library.GSVM18Util;
 
 public class GSVM18Item extends Item {
 	private long id;
@@ -19,6 +19,6 @@ public class GSVM18Item extends Item {
 	}
 	
 	public GSVMLicense toLicense() {
-		return SATSUtil.mapIDToGSVM18License(SATSUtil.createGSVM18Population(this.seed).get(0).getWorld()).get(this.id);
+		return GSVM18Util.mapIDToGSVM18License(GSVM18Util.createGSVM18Population(this.seed).get(0).getWorld()).get(this.id);
 	}
 }

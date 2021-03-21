@@ -12,7 +12,7 @@ import org.spectrumauctions.sats.core.model.Bundle;
 import org.spectrumauctions.sats.core.model.gsvm.GSVMLicense;
 
 import brown.platform.item.ICart;
-import brown.user.agent.library.SATSUtil;
+import brown.user.agent.library.GSVM18Util;
 
 public class DemandSet {
 	private Set<GSVMLicense> items;
@@ -30,7 +30,7 @@ public class DemandSet {
 		if (!this.contains(item)) {
 			this.items.add(item);
 			if (this.allGoods == null) {
-				this.allGoods = SATSUtil.mapIDToGSVM18License(this.items.stream().iterator().next().getWorld());
+				this.allGoods = GSVM18Util.mapIDToGSVM18License(this.items.stream().iterator().next().getWorld());
 			}
 			this.bundle.add(item);
 		}

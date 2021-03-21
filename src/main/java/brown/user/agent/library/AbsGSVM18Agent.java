@@ -29,7 +29,7 @@ import brown.platform.item.library.Cart;
 import brown.platform.item.library.Item;
 import brown.user.agent.IAgent;
 
-public abstract class AbsSpectrumAuctionAgent extends AbsAgent implements IAgent {
+public abstract class AbsGSVM18Agent extends AbsAgent implements IAgent {
 	protected static final double EPSILON = SMRAActivity.EPSILON;
 	private IGeneralValuation valuation;
 	private Integer position;
@@ -40,7 +40,7 @@ public abstract class AbsSpectrumAuctionAgent extends AbsAgent implements IAgent
 	private List<Map<String, Double>> allReserves;
 	private Map<Integer, Integer> privateToPublic; // definitely needs fixing next year. server not sanitizing.
 
-	public AbsSpectrumAuctionAgent(String name) {
+	public AbsGSVM18Agent(String name) {
 		super(name);
 		this.valuation = null;
 		this.auctionID = null;
@@ -275,7 +275,7 @@ public abstract class AbsSpectrumAuctionAgent extends AbsAgent implements IAgent
 	}
 
 	protected boolean isEligible(String good) {
-		return SATSUtil.ELIGIBLE_GOODS.get(this.position).contains(good);
+		return GSVM18Util.ELIGIBLE_GOODS.get(this.position).contains(good);
 	}
 
 	protected boolean isValidBidBundle(Map<String, Double> myBids, Map<String, Double> minBids, boolean printWarnings) {

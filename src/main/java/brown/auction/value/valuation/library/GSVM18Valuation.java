@@ -17,7 +17,7 @@ import brown.auction.value.valuation.ISpecificValuation;
 import brown.platform.item.ICart;
 import brown.platform.item.IItem;
 import brown.platform.item.library.PricedItem;
-import brown.user.agent.library.SATSUtil;
+import brown.user.agent.library.GSVM18Util;
 
 public class GSVM18Valuation implements ISpecificValuation {
 	private int seed;
@@ -47,9 +47,9 @@ public class GSVM18Valuation implements ISpecificValuation {
 	private GSVMBidder getBidder() {
 		GSVMBidder bidder;
 		try {
-			bidder = SATSUtil.restoreGSVM18Population(this.populationID).get(this.index);
+			bidder = GSVM18Util.restoreGSVM18Population(this.populationID).get(this.index);
 		} catch (Exception e) {
-			bidder = SATSUtil.createGSVM18Population(this.seed).get(this.index);
+			bidder = GSVM18Util.createGSVM18Population(this.seed).get(this.index);
 		}
 		return bidder;
 	}
@@ -76,20 +76,20 @@ public class GSVM18Valuation implements ISpecificValuation {
 
 		GSVMBidder bidder = this.getBidder();
 		
-		Map<Long, GSVMLicense> allGoods = SATSUtil.mapIDToGSVM18License(bidder.getWorld());
+		Map<Long, GSVMLicense> allGoods = GSVM18Util.mapIDToGSVM18License(bidder.getWorld());
 		
 		if (cart.getItemByName("demand_query") != null) {
 			if (cart.getItemByName("reset") != null) {
 				this.dqResult.clear();
 				Map<GSVMLicense, BigDecimal> prices = new HashMap<>();
 				for (GSVMLicense license : allGoods.values()) {
-					String name = SATSUtil.GSVM_ID_TO_ITEM.get(license.getId());
+					String name = GSVM18Util.GSVM_ID_TO_ITEM.get(license.getId());
 					if (cart.containsItem(name)) {
 						prices.put(license, new BigDecimal(((PricedItem)cart.getItemByName(name)).getPrice()));
 					}
 				}
 				GSVM_DemandQueryMipResult result = new GSVM_DemandQueryMIP(bidder, prices).getResult();
-				result.getResultingBundle().getLicenses().forEach(license -> this.dqResult.add(SATSUtil.GSVM_ID_TO_ITEM.get(license.getId())));
+				result.getResultingBundle().getLicenses().forEach(license -> this.dqResult.add(GSVM18Util.GSVM_ID_TO_ITEM.get(license.getId())));
 				return null;
 			}
 			for (IItem item : cart.getItems()) {
@@ -103,7 +103,7 @@ public class GSVM18Valuation implements ISpecificValuation {
 		
 		Bundle<GSVMLicense> bundle = new Bundle<>();
 		for (IItem good : cart.getItems()) {
-			bundle.add(allGoods.get(SATSUtil.ITEM_TO_GSVM_ID.get(good.getName())));
+			bundle.add(allGoods.get(GSVM18Util.ITEM_TO_GSVM_ID.get(good.getName())));
 		}
 		return bidder.calculateValue(bundle).doubleValue();
 	}

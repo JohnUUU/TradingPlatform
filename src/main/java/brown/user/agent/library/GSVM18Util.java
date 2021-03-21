@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;import com.google.common.collect.Sets;
 
-public class SATSUtil {
+public class GSVM18Util {
 	public static final GSVMWorld WORLD = new GlobalSynergyValueModel().createWorld(System.currentTimeMillis() % 10000);
 			
 	public static final Map<String, Long> ITEM_TO_GSVM_ID = new ImmutableMap.Builder<String, Long>()
