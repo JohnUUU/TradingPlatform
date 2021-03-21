@@ -17,7 +17,7 @@ import brown.communication.messages.ITradeMessage;
 import brown.platform.item.ICart;
 import brown.platform.item.IItem;
 
-public class SMRAActivity extends AbsActivity implements IActivityRule {
+public class GSVM18_SMRAActivity extends AbsActivity implements IActivityRule {
 	public static final double EPSILON = 2.5;
 
 	@Override

@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import brown.auction.marketstate.IMarketPublicState;
-import brown.auction.rules.activity.SMRAActivity;
+import brown.auction.rules.activity.GSVM18_SMRAActivity;
 import brown.auction.value.valuation.IGeneralValuation;
 import brown.communication.bid.IBidBundle;
 import brown.communication.bid.library.OneSidedBidBundle;
@@ -30,7 +30,7 @@ import brown.platform.item.library.Item;
 import brown.user.agent.IAgent;
 
 public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
-	protected static final double EPSILON = SMRAActivity.EPSILON;
+	protected static final double EPSILON = GSVM18_SMRAActivity.EPSILON;
 	private IGeneralValuation valuation;
 	private Integer position;
 	private int round;
