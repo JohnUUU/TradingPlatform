@@ -13,6 +13,7 @@ import java.util.Set;
 
 import brown.auction.marketstate.IMarketPublicState;
 import brown.auction.rules.activity.GSVM18_SMRAActivity;
+import brown.auction.rules.activity.LSVM18_SMRAActivity;
 import brown.auction.value.valuation.IGeneralValuation;
 import brown.communication.bid.IBidBundle;
 import brown.communication.bid.library.OneSidedBidBundle;
@@ -32,7 +33,7 @@ import brown.user.agent.IAgent;
 public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 	protected static final double EPSILON = GSVM18_SMRAActivity.EPSILON;
 	private IGeneralValuation valuation;
-	private Integer position;
+	private Map<String, Double> baseValues;
 	private int round;
 	private Integer auctionID;
 	private Set<String> allocation;
@@ -44,7 +45,7 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 		super(name);
 		this.valuation = null;
 		this.auctionID = null;
-		this.position = null;
+		this.baseValues = null;
 		this.round = 0;
 		this.name = name;
 		this.allocation = new HashSet<>();
@@ -69,23 +70,21 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 			reserves.remove("reset");
 			reserves.remove("position");
 			
+			this.parseAllocation(tradeRequestMessage.getState());
+			
 			this.allReserves.add(reserves);
 
 			Map<String, Double> minBids = new HashMap<>();
 			for (Map.Entry<String, Double> ent : reserves.entrySet()) {
-				if (this.isEligible(ent.getKey())) {
-					minBids.put(ent.getKey(), ent.getValue());
+				double minBid = ent.getValue();
+				if (!this.allocation.contains(ent.getKey())) {
+					minBid += LSVM18_SMRAActivity.EPSILON;
 				}
+				minBids.put(ent.getKey(), minBid);
 			}
 
-			this.parseAllocation(tradeRequestMessage.getState());
-
-			Map<String, Double> bids;
-			if (this.isNationalBidder()) {
-				bids = this.getNationalBids(Collections.unmodifiableMap(minBids));
-			} else {
-				bids = this.getRegionalBids(Collections.unmodifiableMap(minBids));
-			}
+			Map<String, Double> bids = this.getBids(Collections.unmodifiableMap(minBids));
+			
 			IBidBundle bundle = this.createBidBundle(bids);
 			this.agentBackend
 					.sendMessage(new TradeMessage(0, this.agentBackend.getPrivateID(), this.auctionID, bundle));
@@ -102,10 +101,8 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 
 	protected abstract void onAuctionStart();
 
-	protected abstract Map<String, Double> getNationalBids(Map<String, Double> minBids);
-
-	protected abstract Map<String, Double> getRegionalBids(Map<String, Double> minBids);
-
+	protected abstract Map<String, Double> getBids(Map<String, Double> minBids);
+	
 	protected abstract void onAuctionEnd(Map<Integer, Set<String>> allocations, Map<Integer, Double> payments,
 			List<List<ITradeMessage>> tradeHistory);
 
@@ -113,12 +110,15 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 	public void onValuationMessage(IValuationMessage valuationMessage) {
 		synchronized (this) {
 			this.valuation = valuationMessage.getValuation();
-
-			// get position
-			ICart cart;
-			cart = new Cart();
-			cart.addToCart(new Item("position"));
-			this.position = new Double(this.valuation.getValuation(cart)).intValue();
+			
+			this.baseValues = new HashMap<>();
+			for (String s : LSVM18Util.ITEM_TO_LSVM_ID.keySet()) {
+				// get position
+				ICart cart;
+				cart = new Cart();
+				cart.addToCart(new Item(s));
+				this.baseValues.put(s, this.valuation.getValuation(cart));
+			}
 
 			this.allBids.clear();
 			this.allReserves.clear();
@@ -214,12 +214,8 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 		return this.getValuation(Arrays.asList(goods));
 	}
 
-	protected int getBidderPosition() {
-		return this.position.intValue();
-	}
-
-	protected boolean isNationalBidder() {
-		return this.getBidderPosition() == 7;
+	protected Set<String> getProximity() {
+		return this.baseValues.keySet();
 	}
 
 	protected int getCurrentRound() {
@@ -233,18 +229,6 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 	protected Set<String> getTentativeAllocation() {
 		return Collections.unmodifiableSet(this.allocation);
 	}
-
-	/*
-	 * protected Set<String> demandQuery(Map<String, Double> prices) { Map<IItem,
-	 * Double> itemMap = new HashMap<>(); ICart pc = new Cart();
-	 * prices.entrySet().forEach(ent -> pc.addToCart(new PricedItem(ent.getKey(),
-	 * ent.getValue()))); pc.addToCart(new Item("demand_query")); pc.addToCart(new
-	 * Item("reset")); this.valuation.getValuation(pc); Set<String> result = new
-	 * HashSet<>(); for (String name : SATSUtil.ITEM_TO_GSVM_ID.keySet()) { ICart
-	 * cart = new Cart(); cart.addToCart(new Item("demand_query"));
-	 * cart.addToCart(new Item(name)); if (this.valuation.getValuation(cart) > 0) {
-	 * result.add(name); } } return result; }
-	 */
 
 	private boolean checkRevealedPreference(Set<String> bids, Map<String, Double> reserve) {
 		double newBundleNewReserve = 0.0;
@@ -274,10 +258,6 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 		return true;
 	}
 
-	protected boolean isEligible(String good) {
-		return GSVM18Util.ELIGIBLE_GOODS.get(this.position).contains(good);
-	}
-
 	protected boolean isValidBidBundle(Map<String, Double> myBids, Map<String, Double> minBids, boolean printWarnings) {
 		if (myBids == null) {
 			return true;
@@ -296,24 +276,6 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 				}
 				status = false;
 			}
-		}
-
-		for (String s : myBids.keySet()) {
-			if (!this.isEligible(s)) {
-				if (printWarnings) {
-					System.out.println(
-							"WARNING: as bidder #" + this.position + ", you are ineligible to bid on good " + s);
-				}
-				status = false;
-			}
-		}
-
-		if (!this.isNationalBidder() && myBids.size() > 4) {
-			if (printWarnings) {
-				System.out.println("WARNING: as regional bidder #" + this.position + ", you cannot bid on "
-						+ myBids.size() + " goods; you must choose 4 or fewer.");
-			}
-			status = false;
 		}
 
 		for (String s : myBids.keySet()) {

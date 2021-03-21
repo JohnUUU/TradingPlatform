@@ -43,17 +43,6 @@ public class LSVM18Util {
 			.put("R", 17l)
 			.build();
 	
-	public static final Map<Integer, Set<String>> ELIGIBLE_GOODS = 
-			new ImmutableMap.Builder<Integer, Set<String>>()
-			.put(1, ImmutableSet.of("A", "B", "C", "D", "M", "N"))
-			.put(2, ImmutableSet.of("C", "D", "E", "F", "N", "O"))
-			.put(3, ImmutableSet.of("E", "F", "G", "H", "O", "P"))
-			.put(4, ImmutableSet.of("G", "H", "I", "J", "P", "Q"))
-			.put(5, ImmutableSet.of("I", "J", "K", "L", "Q", "R"))
-			.put(6, ImmutableSet.of("K", "L", "A", "B", "R", "M"))
-			.put(7, ImmutableSet.of("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"))
-			.build();
-	
 	public static final Map<Long, String> LSVM_ID_TO_ITEM = ImmutableMap.copyOf(
 			ITEM_TO_LSVM_ID.entrySet().stream()
 			.collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey)));

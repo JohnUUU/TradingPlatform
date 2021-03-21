@@ -182,7 +182,7 @@
           "aRule": "SMRAAllocation",
           "pRule": "SMRAPayment",
           "qRule": "SimpleOneSidedQuery",
-          "actRule": "SMRAActivity",
+          "actRule": "LSVM18_SMRAActivity",
           "irPolicy": "NonAnonymousPolicy",
           "innerIRPolicy": "SMRAInnerIR",
           "tCondition": "SMRATermination"
