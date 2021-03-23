@@ -74,16 +74,9 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 			
 			this.allReserves.add(reserves);
 
-			Map<String, Double> minBids = new HashMap<>();
-			for (Map.Entry<String, Double> ent : reserves.entrySet()) {
-				double minBid = ent.getValue();
-				if (!this.allocation.contains(ent.getKey())) {
-					minBid += LSVM18_SMRAActivity.EPSILON;
-				}
-				minBids.put(ent.getKey(), minBid);
-			}
-
-			Map<String, Double> bids = this.getBids(Collections.unmodifiableMap(minBids));
+			Map<String, Double> minBids = Collections.unmodifiableMap(reserves);
+			
+			Map<String, Double> bids = this.getBids(minBids);
 			
 			IBidBundle bundle = this.createBidBundle(bids);
 			this.agentBackend
@@ -93,10 +86,6 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 
 			this.round++;
 		}
-	}
-	
-	protected Map<String, Double> getAllMinBids() {
-		return Collections.unmodifiableMap(new HashMap<>(this.allReserves.get(this.allReserves.size() - 1)));
 	}
 
 	protected abstract void onAuctionStart();
