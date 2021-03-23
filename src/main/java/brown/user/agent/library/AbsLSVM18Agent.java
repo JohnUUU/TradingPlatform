@@ -77,6 +77,9 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 			Map<String, Double> minBids = Collections.unmodifiableMap(reserves);
 			
 			Map<String, Double> bids = this.getBids(minBids);
+			if (bids == null) {
+				bids = new HashMap<>();
+			}
 			
 			IBidBundle bundle = this.createBidBundle(bids);
 			this.agentBackend
