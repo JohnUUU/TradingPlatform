@@ -39,6 +39,7 @@ public class LSVM18Valuation implements ISpecificValuation {
 		this.index = index;
 		this.populationID = populationID;
 		this.dqResult = new HashSet<>();
+		this.bidder = getBidder();
 	}
 	
 	private LSVMBidder getBidder() {
