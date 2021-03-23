@@ -117,7 +117,10 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 				ICart cart;
 				cart = new Cart();
 				cart.addToCart(new Item(s));
-				this.baseValues.put(s, this.valuation.getValuation(cart));
+				double v = this.valuation.getValuation(cart);
+				if (v > 0) {
+					this.baseValues.put(s, v);
+				}
 			}
 
 			this.allBids.clear();

@@ -1,5 +1,6 @@
 package brown.auction.rules.termination;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,10 +34,18 @@ public class SMRATermination extends AbsRule implements ITerminationCondition {
 		
 		boolean demand = false;
 		for (ITradeMessage msg : messages) {
+			List<ICart> alloc = state.getAllocation().getOrDefault(msg.getAgentID(), new ArrayList<>());
 			for (ICart cart : msg.getBid().getBids().keySet()) {
 				if (cart.getItems().size() > 0) {
-					demand = true;
-					break;
+					for (IItem i : cart.getItems()) {
+						for (ICart c : alloc) {
+							for (IItem i2 : c.getItems()) {
+								if (!i.equals(i2)) {
+									demand = true;
+								}
+							}
+						}
+					}
 				}
 				if (demand) {
 					break;

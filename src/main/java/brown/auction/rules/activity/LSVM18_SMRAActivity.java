@@ -28,7 +28,7 @@ public class LSVM18_SMRAActivity extends AbsActivity implements IActivityRule {
 		if (reserves != null) {
 			reserves = new HashMap<>(reserves);
 		}
-
+		
 		int agent = aBid.getAgentID();
 
 		IBidBundle bundle = aBid.getBid();
@@ -36,18 +36,7 @@ public class LSVM18_SMRAActivity extends AbsActivity implements IActivityRule {
 			state.setAcceptable(false);
 			return;
 		}
-
-		Map<String, Integer> currAlloc = new HashMap<>();
-		for (Map.Entry<Integer, List<ICart>> ent : state.getAllocation().entrySet()) {
-
-			for (ICart cart : ent.getValue()) {
-				for (IItem item : cart.getItems()) {
-					currAlloc.put(item.getName(), ent.getKey().intValue());
-				}
-			}
-		}
-
-
+		
 		Map<ICart, Double> carts = bundle.getBids();
 		state.setAcceptable(true);
 		for (ICart cart : carts.keySet()) {
@@ -55,22 +44,16 @@ public class LSVM18_SMRAActivity extends AbsActivity implements IActivityRule {
 				state.setAcceptable(false);
 				return;
 			}
-
-			// all items are size 1 and bids are over the reserve. bids exceed the reserve
-			// by epsilon if not from
-			// the current winner of that good.
+			
+			// all items are size 1 and bids are over the reserve.
 			for (IItem item : cart.getItems()) {
 				if (item.getItemCount() != 1) {
 					state.setAcceptable(false);
 					return;
 				}
-
+				
 				if (reserves != null && reserves.containsKey(item.getName())) {
-					double minBid = reserves.get(item.getName());
-					if (currAlloc.get(item.getName()).intValue() != agent) {
-						minBid += EPSILON;
-					}
-					if (carts.get(cart) < minBid) {
+					if (carts.get(cart) < reserves.get(item.getName())) {
 						state.setAcceptable(false);
 						return;
 					}
@@ -90,7 +73,7 @@ public class LSVM18_SMRAActivity extends AbsActivity implements IActivityRule {
 				currPriceNewBundle += state.getReserves().get(item.getName());
 			}
 		}
-
+		
 		List<List<ITradeMessage>> history = state.getTradeHistory();
 		for (int round = 0; round < history.size(); round++) {
 			// get this bidder's bid and the reserve
@@ -114,20 +97,20 @@ public class LSVM18_SMRAActivity extends AbsActivity implements IActivityRule {
 			if (oldReserves.isEmpty() || newBundle.equals(oldBundle)) {
 				continue;
 			}
-
+			
 			double currPriceOldBundle = 0.0;
 			double oldPriceNewBundle = 0.0;
 			double oldPriceOldBundle = 0.0;
-
+			
 			for (String good : newBundle) {
 				oldPriceNewBundle += oldReserves.get(good);
 			}
-
+			
 			for (String good : oldBundle) {
 				oldPriceOldBundle += oldReserves.get(good);
 				currPriceOldBundle += state.getReserves().get(good);
 			}
-
+			
 			if ((currPriceOldBundle - oldPriceOldBundle) < (currPriceNewBundle - oldPriceNewBundle)) {
 				state.setAcceptable(false);
 				return;
@@ -141,22 +124,22 @@ public class LSVM18_SMRAActivity extends AbsActivity implements IActivityRule {
 		if (state.getReserves() != null) {
 			state.getReserves().entrySet().forEach(ent -> reserves.put(ent.getKey(), ent.getValue()));
 		}
-
+		
 		for (IItem item : items.getItems()) {
 			if (!reserves.containsKey(item.getName())) {
-				reserves.put(item.getName(), 0.0);
+				reserves.put(item.getName(), EPSILON);
 			}
 		}
-
+		
 		if (state.getTicks() == 0 || state.getTradeHistory().size() < 2) {
 			state.setReserves(reserves);
 			return;
 		}
-
+		
 		// for each good
 		// if multiple bidders, set to second highest bid
 		// else if the good changed hands, increment by epsilon
-
+		
 		// good -> agent -> bid
 		Map<String, Map<Integer, Double>> demands = new HashMap<>();
 		List<List<ITradeMessage>> history = state.getTradeHistory();
@@ -173,14 +156,14 @@ public class LSVM18_SMRAActivity extends AbsActivity implements IActivityRule {
 				}
 			}
 		}
-
+		
 		// get the previous allocation
 		Map<String, Integer> prevAlloc = new HashMap<>();
 		for (ITradeMessage message : history.get(history.size() - 2)) {
 			if (message.getAuctionID().intValue() != -2) {
 				continue;
 			}
-
+			
 			int agent = message.getAgentID().intValue();
 			for (ICart cart : message.getBid().getBids().keySet()) {
 				for (IItem item : cart.getItems()) {
@@ -188,7 +171,7 @@ public class LSVM18_SMRAActivity extends AbsActivity implements IActivityRule {
 				}
 			}
 		}
-
+		
 		Map<String, Integer> currAlloc = new HashMap<>();
 		for (Map.Entry<Integer, List<ICart>> ent : state.getAllocation().entrySet()) {
 			int agent = ent.getKey().intValue();
@@ -198,7 +181,8 @@ public class LSVM18_SMRAActivity extends AbsActivity implements IActivityRule {
 				}
 			}
 		}
-
+		
+		
 		for (String item : demands.keySet()) {
 			if (demands.get(item).size() <= 1) {
 				Integer previousOwner = prevAlloc.getOrDefault(item, null);
