@@ -209,6 +209,10 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 	protected Set<String> getProximity() {
 		return this.baseValues.keySet();
 	}
+	
+	protected boolean isNationalBidder() {
+		return this.baseValues.size() == 18;
+	}
 
 	protected int getCurrentRound() {
 		return this.round;
