@@ -1,6 +1,7 @@
 package brown.auction.rules.termination;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,27 +33,31 @@ public class SMRATermination extends AbsRule implements ITerminationCondition {
 			return;
 		}
 		
-		boolean demand = false;
+		Map<Integer, Set<IItem>> alloc = new HashMap<>();
+		for (Map.Entry<Integer, List<ICart>> ent : state.getAllocation().entrySet()) {
+			Set<IItem> items = alloc.getOrDefault(ent.getKey(), new HashSet<>());
+			for (ICart cart : ent.getValue()) {
+				items.addAll(cart.getItems());
+			}
+			alloc.put(ent.getKey(), items);
+		}
+		
+		boolean incremental = false;
 		for (ITradeMessage msg : messages) {
-			List<ICart> alloc = state.getAllocation().getOrDefault(msg.getAgentID(), new ArrayList<>());
 			for (ICart cart : msg.getBid().getBids().keySet()) {
 				if (cart.getItems().size() > 0) {
 					for (IItem i : cart.getItems()) {
-						for (ICart c : alloc) {
-							for (IItem i2 : c.getItems()) {
-								if (!i.equals(i2)) {
-									demand = true;
-								}
-							}
+						if (!alloc.getOrDefault(msg.getAgentID(), Collections.EMPTY_SET).contains(i)) {
+							incremental = true;
 						}
 					}
 				}
-				if (demand) {
+				if (incremental) {
 					break;
 				}
 			}
 		}
-		if (!demand) {
+		if (!incremental) {
 			state.close();
 			return;
 		}
