@@ -11,8 +11,8 @@ import java.util.Set;
 import brown.communication.messages.ITradeMessage;
 import brown.user.agent.IAgent;
 
-public class Tier1SpectrumAuctionAgent extends AbsGSVM18Agent implements IAgent {
-	public Tier1SpectrumAuctionAgent(String name) {
+public class Tier1GSVM18Agent extends AbsGSVM18Agent implements IAgent {
+	public Tier1GSVM18Agent(String name) {
 		super(name);
 	}
 
