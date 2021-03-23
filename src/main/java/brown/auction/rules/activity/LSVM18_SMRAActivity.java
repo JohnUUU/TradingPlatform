@@ -18,7 +18,7 @@ import brown.platform.item.ICart;
 import brown.platform.item.IItem;
 
 public class LSVM18_SMRAActivity extends AbsActivity implements IActivityRule {
-	public static final double EPSILON = 1.0;
+	public static final double EPSILON = 1.25;
 
 	@Override
 	public void isAcceptable(IMarketState state, ITradeMessage aBid, List<ITradeMessage> currentBids, ICart items) {

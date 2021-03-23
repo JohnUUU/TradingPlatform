@@ -19,7 +19,7 @@ import brown.platform.item.IItem;
 
 public class SMRATermination extends AbsRule implements ITerminationCondition {
 	private static final double LAMBDA = 0.25;
-	private static final int MIN_END_ROUND = 30;
+	private static final int MIN_END_ROUND = 35;
 	private static Integer END_ROUND = null;
 	
 
@@ -47,7 +47,7 @@ public class SMRATermination extends AbsRule implements ITerminationCondition {
 			for (ICart cart : msg.getBid().getBids().keySet()) {
 				if (cart.getItems().size() > 0) {
 					for (IItem i : cart.getItems()) {
-						if (!alloc.getOrDefault(msg.getAgentID(), Collections.EMPTY_SET).contains(i)) {
+						if (!alloc.getOrDefault(msg.getAgentID(), Collections.emptySet()).contains(i)) {
 							incremental = true;
 						}
 					}
