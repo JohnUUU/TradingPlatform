@@ -35,6 +35,7 @@ public class SMRAPayment implements IPaymentRule {
 			Map<String, Double> reserves = state.getReserves();
 			Map<String, Double> p1 = new HashMap<>();
 			Map<String, Double> p2 = new HashMap<>();
+			Map<String, Integer> highestBidder = new HashMap<>();
 			for (ITradeMessage message : messages) {
 				for (Map.Entry<ICart, Double> ent : message.getBid().getBids().entrySet()) {
 					ICart cart = ent.getKey();
@@ -52,6 +53,7 @@ public class SMRAPayment implements IPaymentRule {
 					if (bid > h1) {
 						p2.put(item.getName(), h1);
 						p1.put(item.getName(), bid);
+						highestBidder.put(item.getName(), message.getAgentID());
 					} else if (bid > h2) {
 						p2.put(item.getName(), bid);
 					}
@@ -60,11 +62,29 @@ public class SMRAPayment implements IPaymentRule {
 			
 			Map<String, Double> itemPrices = new HashMap<>();
 			for (Map.Entry<Integer, List<ICart>> ent : state.getAllocation().entrySet()) {
+				int agentID = ent.getKey();
 				for (ICart cart : ent.getValue()) {
 					for (IItem item : cart.getItems()) {
 						double price = 0.0;
 						if (p1.containsKey(item.getName())) {
-							price = Math.max(p2.get(item.getName()), reserves.get(item.getName()));
+							// if only one bidder:
+							if (reserves.get(item.getName()) > p2.get(item.getName())) {
+								if (highestBidder.get(item.getName()) != null && highestBidder.get(item.getName()).intValue() == agentID) {
+									// only bid was the current winner. price is same as last round.
+									for (IAccountUpdate upd : state.getPayments()) {
+										if (upd.getCart().containsItem(item.getName())) {
+											price = upd.getCost().doubleValue();
+											break;
+										}
+									}
+								} else {
+									// new winner is only bid, increase to reserve
+									price = reserves.get(item.getName());
+								}
+							} else {
+								// else: multiple bidders. take p2
+								price = p2.get(item.getName());
+							}
 						} else {
 							// there were no bids. price is the same as last round.
 							for (IAccountUpdate upd : state.getPayments()) {
