@@ -26,10 +26,10 @@ public class SMRAPayment implements IPaymentRule {
 		if (state.getAllocation().isEmpty()) {
 			return;
 		}
-		
+
 		List<List<ITradeMessage>> history = state.getTradeHistory();
 		List<IAccountUpdate> accountUpdates = new LinkedList<IAccountUpdate>();
-		
+
 		if (state.isOpen()) {
 			// not last round. second-price payments floored by reserve.
 			Map<String, Double> reserves = state.getReserves();
@@ -40,16 +40,16 @@ public class SMRAPayment implements IPaymentRule {
 				for (Map.Entry<ICart, Double> ent : message.getBid().getBids().entrySet()) {
 					ICart cart = ent.getKey();
 					double bid = ent.getValue();
-					
+
 					assert cart.getItems().size() == 1;
 					IItem item = cart.getItems().get(0);
-					
+
 					p1.putIfAbsent(item.getName(), 0.0);
 					p2.putIfAbsent(item.getName(), 0.0);
-					
+
 					double h1 = p1.get(item.getName());
 					double h2 = p2.get(item.getName());
-					
+
 					if (bid > h1) {
 						p2.put(item.getName(), h1);
 						p1.put(item.getName(), bid);
@@ -59,7 +59,7 @@ public class SMRAPayment implements IPaymentRule {
 					}
 				}
 			}
-			
+
 			Map<String, Double> itemPrices = new HashMap<>();
 			for (Map.Entry<Integer, List<ICart>> ent : state.getAllocation().entrySet()) {
 				int agentID = ent.getKey();
@@ -69,7 +69,8 @@ public class SMRAPayment implements IPaymentRule {
 						if (p1.containsKey(item.getName())) {
 							// if only one bidder:
 							if (reserves.get(item.getName()) > p2.get(item.getName())) {
-								if (highestBidder.get(item.getName()) != null && highestBidder.get(item.getName()).intValue() == agentID) {
+								if (highestBidder.get(item.getName()) != null
+										&& highestBidder.get(item.getName()).intValue() == agentID) {
 									// only bid was the current winner. price is same as last round.
 									for (IAccountUpdate upd : state.getPayments()) {
 										if (upd.getCart().containsItem(item.getName())) {
@@ -101,10 +102,11 @@ public class SMRAPayment implements IPaymentRule {
 					}
 				}
 			}
-			
+
 			// add allocations and reserves to trade history as "bids"
-			// this is the only way I can think of to keep persistent data on round-by-round allocations & reserves
-			// we should add a real way to do this later 
+			// this is the only way I can think of to keep persistent data on round-by-round
+			// allocations & reserves
+			// we should add a real way to do this later
 			Map<ICart, Double> reserveBids = new HashMap<>();
 			for (Map.Entry<String, Double> ent : reserves.entrySet()) {
 				ICart cart = new Cart();
@@ -123,46 +125,7 @@ public class SMRAPayment implements IPaymentRule {
 				}
 				history.get(history.size() - 1).add(new TradeMessage(-1, ent.getKey(), -2, new OneSidedBidBundle(map)));
 			}
-		} else {
-			// auction over; search all rounds
-			double bestRev = 0.0;
-			Map<Integer, Double> bestPayment = null;
-			for (int round = 0; round < history.size(); round++) {
-				if (history.get(round).isEmpty()) {
-					continue;
-				}
-				
-				double rev = 0.0;
-				Map<Integer, Double> payment = new HashMap<>();
-				for (ITradeMessage msg : history.get(round)) {
-					if (msg.getAuctionID().intValue() == -2) {
-						int agent = msg.getAgentID().intValue();
-						payment.putIfAbsent(agent, 0.0);
-						for (Map.Entry<ICart, Double> ent : msg.getBid().getBids().entrySet()) {
-							rev += ent.getValue();
-							payment.put(agent, payment.get(agent) + ent.getValue());
-						}
-					}
-				}
-				if (rev >= bestRev) {
-					bestRev = rev;
-					bestPayment = payment;
-				}
-			}
-			
-			if (bestPayment != null) {
-				for (Map.Entry<Integer, Double> ent : bestPayment.entrySet()) {
-					accountUpdates.add(new AccountUpdate(ent.getKey(), ent.getValue(), state.getAllocation().get(ent.getKey()).get(0)));
-				}
-			}
-			
-			// remove hacky entries from trade history
-			for (List<ITradeMessage> lst : history) {
-				lst.removeIf(message -> message.getAuctionID().intValue() < 0);
-			}
 		}
-		
-		state.setPayments(accountUpdates);
 
 	}
 }
