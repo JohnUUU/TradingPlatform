@@ -123,8 +123,6 @@ public class SMRAPayment implements IPaymentRule {
 				}
 				history.get(history.size() - 1).add(new TradeMessage(-1, ent.getKey(), -2, new OneSidedBidBundle(map)));
 			}
-			System.out.println(messages);
-			System.out.println(accountUpdates);
 		} else {
 			// auction over; search all rounds
 			double bestRev = 0.0;
