@@ -31,7 +31,7 @@ import brown.platform.item.library.Item;
 import brown.user.agent.IAgent;
 
 public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
-	protected static final double EPSILON = GSVM18_SMRAActivity.EPSILON;
+	protected static final double EPSILON = LSVM18_SMRAActivity.EPSILON;
 	private IGeneralValuation valuation;
 	private Map<String, Double> baseValues;
 	private int round;
