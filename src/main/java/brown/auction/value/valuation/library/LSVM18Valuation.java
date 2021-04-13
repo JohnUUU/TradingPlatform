@@ -24,14 +24,12 @@ public class LSVM18Valuation implements ISpecificValuation {
 	private int index;
 	private long populationID;
 	private Set<String> dqResult;
-	private LSVMBidder bidder;
 	
 	public LSVM18Valuation() {
 		this.seed = 0;
 		this.index = 0;
 		this.populationID = 0;
 		this.dqResult = new HashSet<>();
-		this.bidder = getBidder();
 	}
 	
 	public LSVM18Valuation(int seed, int index, long populationID, int agentID) {
@@ -39,7 +37,6 @@ public class LSVM18Valuation implements ISpecificValuation {
 		this.index = index;
 		this.populationID = populationID;
 		this.dqResult = new HashSet<>();
-		this.bidder = getBidder();
 	}
 	
 	private LSVMBidder getBidder() {
@@ -57,6 +54,8 @@ public class LSVM18Valuation implements ISpecificValuation {
 		if (cart.getItemByName("position") != null) {
 			return new Integer(this.index).doubleValue();
 		}
+		
+		LSVMBidder bidder = getBidder();
 		
 		Map<Long, LSVMLicense> allGoods = LSVM18Util.mapIDToLSVM18License(bidder.getWorld());
 		

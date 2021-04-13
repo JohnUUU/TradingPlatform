@@ -6,7 +6,7 @@
   "serverPort": 5000,
   "simulation": [{
     "numRuns": 1,
-    "groupSize": 7,
+    "groupSize": 6,
     "items": [{
         "itemName": "demand_query",
         "numItems": "0"
