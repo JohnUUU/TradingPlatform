@@ -69,18 +69,18 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 			reserves.remove("demand_query");
 			reserves.remove("reset");
 			reserves.remove("position");
-			
+
 			this.parseAllocation(tradeRequestMessage.getState());
-			
+
 			this.allReserves.add(reserves);
 
 			Map<String, Double> minBids = Collections.unmodifiableMap(reserves);
-			
+
 			Map<String, Double> bids = this.getBids(minBids);
 			if (bids == null) {
 				bids = new HashMap<>();
 			}
-			
+
 			IBidBundle bundle = this.createBidBundle(bids);
 			this.agentBackend
 					.sendMessage(new TradeMessage(0, this.agentBackend.getPrivateID(), this.auctionID, bundle));
@@ -94,7 +94,7 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 	protected abstract void onAuctionStart();
 
 	protected abstract Map<String, Double> getBids(Map<String, Double> minBids);
-	
+
 	protected abstract void onAuctionEnd(Map<Integer, Set<String>> allocations, Map<Integer, Double> payments,
 			List<List<ITradeMessage>> tradeHistory);
 
@@ -102,7 +102,7 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 	public void onValuationMessage(IValuationMessage valuationMessage) {
 		synchronized (this) {
 			this.valuation = valuationMessage.getValuation();
-			
+
 			this.baseValues = new HashMap<>();
 			for (String s : LSVM18Util.ITEM_TO_LSVM_ID.keySet()) {
 				// get position
@@ -123,7 +123,7 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 			this.onAuctionStart();
 		}
 	}
-	
+
 	private List<List<ITradeMessage>> sanitize(Map<Integer, Set<String>> allocations, Map<Integer, Double> payments,
 			List<List<ITradeMessage>> tradeHistory) {
 		Map<Integer, Integer> p = new HashMap<>(this.privateToPublic);
@@ -136,35 +136,36 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 				}
 			}
 		}
-		
+
 		if (r.containsKey(this.agentBackend.getPublicID())) {
 			Integer pr = r.get(this.agentBackend.getPublicID());
 			p.put(pr, p.size());
 			p.put(this.agentBackend.getPrivateID(), this.agentBackend.getPublicID());
 		}
-		
+
 		this.privateToPublic = p;
-		
+
 		List<List<ITradeMessage>> hist = new ArrayList<>(tradeHistory.size());
 		for (List<ITradeMessage> msgs : tradeHistory) {
 			hist.add(new ArrayList<>(msgs.size()));
 			for (ITradeMessage msg : msgs) {
 				if (p.containsKey(msg.getAgentID())) {
-					hist.get(hist.size() - 1).add(new TradeMessage(msg.getMessageID(), p.get(msg.getAgentID()), msg.getCorrespondingMessageID(), msg.getAuctionID(), msg.getBid()));
+					hist.get(hist.size() - 1).add(new TradeMessage(msg.getMessageID(), p.get(msg.getAgentID()),
+							msg.getCorrespondingMessageID(), msg.getAuctionID(), msg.getBid()));
 				}
 			}
-		} 
-		
+		}
+
 		for (Integer i : new ArrayList<Integer>(allocations.keySet())) {
 			allocations.put(p.get(i), allocations.get(i));
 			allocations.remove(i);
 		}
-		
+
 		for (Integer i : new ArrayList<Integer>(payments.keySet())) {
 			payments.put(p.get(i), payments.get(i));
 			payments.remove(i);
 		}
-		
+
 		return hist;
 	}
 
@@ -189,7 +190,7 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 				payments.putIfAbsent(upd.getTo(), 0.0);
 				payments.put(upd.getTo(), payments.get(upd.getTo()) + upd.getCost());
 			}
-			
+
 			List<List<ITradeMessage>> hist = this.sanitize(alloc, payments, state.getTradeHistory());
 
 			this.onAuctionEnd(alloc, payments, hist);
@@ -212,7 +213,7 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 	protected Set<String> getProximity() {
 		return this.baseValues.keySet();
 	}
-	
+
 	protected boolean isNationalBidder() {
 		return this.baseValues.size() == 18;
 	}
@@ -222,7 +223,7 @@ public abstract class AbsLSVM18Agent extends AbsAgent implements IAgent {
 	}
 
 	protected double clipBid(String good, double bid, Map<String, Double> minBids) {
-		return Math.max(bid, minBids.getOrDefault(bid, 0.0));
+		return Math.max(bid, minBids.getOrDefault(good, 0.0));
 	}
 
 	protected Set<String> getTentativeAllocation() {
